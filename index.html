@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SILICON-VLSI Learnings/Notes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+
+        /* Simple loading spinner animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased flex flex-col items-center">
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-red-500 text-white px-4 py-3 rounded shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2 max-w-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span id="toast-message">Error message here</span>
+    </div>
+
+    <!-- Initial Loading Screen -->
+    <div id="initial-loading" class="fixed inset-0 bg-gray-50 flex flex-col items-center justify-center z-40 transition-opacity duration-500">
+        <div class="loader mb-4 w-12 h-12 border-4"></div>
+        <p class="text-gray-500 font-medium">Connecting securely...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="hidden flex-col items-center justify-center min-h-screen w-full px-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center space-y-6">
+            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900" id="auth-title">SILICON-VLSI Learnings/Notes</h1>
+            <p class="text-gray-500" id="auth-subtitle">Join the community to share and view VLSI learnings.</p>
+            
+            <form id="auth-form" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="auth-email" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="you@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="auth-password" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="••••••••">
+                </div>
+                <button type="submit" id="btn-auth-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg transition font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Log In
+                </button>
+            </form>
+            
+            <div class="pt-2 text-sm text-gray-600">
+                <span id="auth-toggle-text">Don't have an account?</span> 
+                <button id="btn-auth-toggle" class="text-blue-600 font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer focus:outline-none">Sign up here</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboard-screen" class="hidden w-full max-w-6xl mx-auto px-4 py-8 flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold text-xl">
+                    S
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">SILICON-VLSI Learnings/Notes</h2>
+                    <p id="user-info" class="text-xs text-gray-500">Loading user...</p>
+                </div>
+            </div>
+            <button id="btn-logout" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition font-medium">
+                Log Out
+            </button>
+        </header>
+
+        <!-- Note Input Area -->
+        <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-8">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">Create New Note</h3>
+            <form id="note-form" class="space-y-4">
+                <div>
+                    <input type="text" id="note-title" placeholder="Note Title..." required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-800 font-medium placeholder-gray-400">
+                </div>
+                <div>
+                    <textarea id="note-content" placeholder="E.g., Notes on Streaming Scan Network packetization or Cadence Genus scripts..." required rows="4" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-700 resize-none placeholder-gray-400"></textarea>
+                </div>
+                
+                <!-- Tags Section -->
+                <div>
+                    <span class="block text-sm font-medium text-gray-700 mb-2">Optional Tags:</span>
+                    <div class="flex flex-wrap gap-2" id="tag-container">
+                        <label class="cursor-pointer">
+                            <input type="checkbox" value="DFT" class="peer sr-only note-tag-checkbox">
+                            <span class="px-3 py-1 text-sm rounded-full border border-gray-300 text-gray-600 peer-checked:bg-blue-100 peer-checked:text-blue-700 peer-checked:border-blue-300 transition-colors">DFT</span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="checkbox" value="ATPG" class="peer sr-only note-tag-checkbox">
+                            <span class="px-3 py-1 text-sm rounded-full border border-gray-300 text-gray-600 peer-checked:bg-blue-100 peer-checked:text-blue-700 peer-checked:border-blue-300 transition-colors">ATPG</span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="checkbox" value="Scan Insertion" class="peer sr-only note-tag-checkbox">
+                            <span class="px-3 py-1 text-sm rounded-full border border-gray-300 text-gray-600 peer-checked:bg-blue-100 peer-checked:text-blue-700 peer-checked:border-blue-300 transition-colors">Scan Insertion</span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="checkbox" value="Verilog" class="peer sr-only note-tag-checkbox">
+                            <span class="px-3 py-1 text-sm rounded-full border border-gray-300 text-gray-600 peer-checked:bg-blue-100 peer-checked:text-blue-700 peer-checked:border-blue-300 transition-colors">Verilog</span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="checkbox" value="Python" class="peer sr-only note-tag-checkbox">
+                            <span class="px-3 py-1 text-sm rounded-full border border-gray-300 text-gray-600 peer-checked:bg-blue-100 peer-checked:text-blue-700 peer-checked:border-blue-300 transition-colors">Python</span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="checkbox" value="SSN" class="peer sr-only note-tag-checkbox">
+                            <span class="px-3 py-1 text-sm rounded-full border border-gray-300 text-gray-600 peer-checked:bg-blue-100 peer-checked:text-blue-700 peer-checked:border-blue-300 transition-colors">SSN</span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="checkbox" value="Tessent" class="peer sr-only note-tag-checkbox">
+                            <span class="px-3 py-1 text-sm rounded-full border border-gray-300 text-gray-600 peer-checked:bg-blue-100 peer-checked:text-blue-700 peer-checked:border-blue-300 transition-colors">Tessent</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" id="btn-save-note" class="bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-6 rounded-lg transition font-medium flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Save Note
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Notes Grid Area -->
+        <section class="flex-1">
+            <div class="flex justify-between items-end mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Shared Community Feed</h3>
+                <span id="notes-count" class="text-sm font-medium text-gray-500 bg-gray-200 px-2.5 py-0.5 rounded-full">0 notes</span>
+            </div>
+            
+            <div id="notes-loading" class="flex flex-col items-center justify-center py-12 text-gray-400 hidden">
+                <div class="loader mb-4 border-gray-300" style="border-top-color: #9ca3af;"></div>
+                <p>Loading your notes...</p>
+            </div>
+
+            <div id="notes-empty" class="hidden flex-col items-center justify-center py-16 text-center bg-white rounded-xl border border-dashed border-gray-300">
+                <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <h4 class="text-lg font-medium text-gray-600 mb-1">No notes yet</h4>
+                <p class="text-gray-400 text-sm max-w-xs mx-auto">Create your first note above to share with the community. Everyone will be able to see it.</p>
+            </div>
+
+            <div id="notes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Notes will be injected here dynamically -->
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'demo-notes-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            // Mock config to prevent crashes if run outside intended environment
+            apiKey: "mock-key",
+            authDomain: "mock-domain",
+            projectId: "mock-project",
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let currentUserId = null;
+        let notesUnsubscribe = null;
+
+        // DOM Elements
+        const screens = {
+            loading: document.getElementById('initial-loading'),
+            login: document.getElementById('login-screen'),
+            dashboard: document.getElementById('dashboard-screen')
+        };
+        const buttons = {
+            logout: document.getElementById('btn-logout'),
+            saveNote: document.getElementById('btn-save-note'),
+            authToggle: document.getElementById('btn-auth-toggle'),
+            authSubmit: document.getElementById('btn-auth-submit')
+        };
+        const forms = {
+            note: document.getElementById('note-form'),
+            auth: document.getElementById('auth-form')
+        };
+        const inputs = {
+            title: document.getElementById('note-title'),
+            content: document.getElementById('note-content'),
+            authEmail: document.getElementById('auth-email'),
+            authPassword: document.getElementById('auth-password')
+        };
+        const displays = {
+            userInfo: document.getElementById('user-info'),
+            notesGrid: document.getElementById('notes-grid'),
+            notesEmpty: document.getElementById('notes-empty'),
+            notesLoading: document.getElementById('notes-loading'),
+            notesCount: document.getElementById('notes-count')
+        };
+        const toast = {
+            container: document.getElementById('toast'),
+            message: document.getElementById('toast-message')
+        };
+
+        
+        function showToast(message, isError = true) {
+            toast.message.textContent = message;
+            if (isError) {
+                toast.container.classList.replace('bg-green-500', 'bg-red-500');
+            } else {
+                toast.container.classList.replace('bg-red-500', 'bg-green-500');
+            }
+            toast.container.classList.remove('opacity-0', 'pointer-events-none');
+            
+            setTimeout(() => {
+                toast.container.classList.add('opacity-0', 'pointer-events-none');
+            }, 4000);
+        }
+
+        function switchScreen(screenName) {
+            Object.values(screens).forEach(screen => {
+                if (screen) screen.classList.add('hidden');
+            });
+            if (screens[screenName]) {
+                screens[screenName].classList.remove('hidden');
+                
+                // For Flexbox center layouts
+                if(screenName === 'login') screens[screenName].classList.add('flex');
+                if(screenName === 'loading') screens[screenName].classList.add('flex');
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        }
+
+        function formatDate(timestamp) {
+            if (!timestamp) return 'Just now';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString(undefined, { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+
+        // Authenticate initial custom token if available (Environment Requirement)
+        async function initAuth() {
+            if (typeof __initial_auth_token !== 'undefined') {
+                try {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } catch(error) {
+                    console.error("Initial auth failed:", error);
+                    switchScreen('login');
+                }
+            } else {
+                // If no auto-login token is provided, show the login screen
+                switchScreen('login');
+            }
+        }
+
+        // Listen for Authentication State Changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                
+                // Format user display name
+                let displayName = user.email || "User";
+                displays.userInfo.textContent = `Logged in as: ${displayName} (${currentUserId.substring(0,6)}...)`;
+                
+                switchScreen('dashboard');
+                loadNotes(); // Start fetching data
+            } else {
+                currentUserId = null;
+                if (notesUnsubscribe) {
+                    notesUnsubscribe(); // Stop listening to Firestore
+                    notesUnsubscribe = null;
+                }
+                switchScreen('login');
+            }
+        });
+
+        // Email/Password Auth Logic
+        let isLoginMode = true;
+
+        buttons.authToggle.addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+            const authTitle = document.getElementById('auth-title');
+            const authSubtitle = document.getElementById('auth-subtitle');
+            const authToggleText = document.getElementById('auth-toggle-text');
+
+            if (isLoginMode) {
+                authTitle.textContent = 'SILICON-VLSI Learnings/Notes';
+                authSubtitle.textContent = 'Join the community to share and view VLSI learnings.';
+                buttons.authSubmit.textContent = 'Log In';
+                authToggleText.textContent = "Don't have an account?";
+                buttons.authToggle.textContent = 'Sign up here';
+            } else {
+                authTitle.textContent = 'Create Account';
+                authSubtitle.textContent = 'Sign up to start sharing your learnings with everyone.';
+                buttons.authSubmit.textContent = 'Sign Up';
+                authToggleText.textContent = "Already have an account?";
+                buttons.authToggle.textContent = 'Log in here';
+            }
+        });
+
+        forms.auth.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = inputs.authEmail.value.trim();
+            const password = inputs.authPassword.value.trim();
+
+            if (!email || !password) {
+                showToast("Please enter both email and password.");
+                return;
+            }
+
+            buttons.authSubmit.disabled = true;
+            buttons.authSubmit.innerHTML = '<div class="loader w-4 h-4 border-2 border-white mr-2 inline-block align-middle"></div> Processing...';
+
+            try {
+                if (isLoginMode) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                }
+                forms.auth.reset(); 
+            } catch (error) {
+                console.error("Auth Error:", error);
+                let msg = "Authentication failed.";
+                if (error.code === 'auth/email-already-in-use') msg = "Email already in use.";
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') msg = "Invalid email or password.";
+                if (error.code === 'auth/weak-password') msg = "Password should be at least 6 characters.";
+                showToast(msg);
+            } finally {
+                buttons.authSubmit.disabled = false;
+                buttons.authSubmit.textContent = isLoginMode ? 'Log In' : 'Sign Up';
+            }
+        });
+
+        buttons.logout.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                showToast("Error signing out.");
+            }
+        });
+
+
+
+        // Load notes from shared public collection (as requested: shared access protected by auth)
+        function loadNotes() {
+            if (!currentUserId) return; // Guard clause
+
+            displays.notesLoading.classList.remove('hidden');
+            displays.notesEmpty.classList.add('hidden');
+            displays.notesGrid.innerHTML = '';
+
+            // Using strict path rule: /artifacts/{appId}/public/data/{collectionName}
+            const notesRef = collection(db, 'artifacts', appId, 'public', 'data', 'notes');
+
+            // No complex queries (Rule 2). Fetch all, sort in memory.
+            notesUnsubscribe = onSnapshot(notesRef, (snapshot) => {
+                displays.notesLoading.classList.add('hidden');
+                
+                const notes = [];
+                snapshot.forEach(doc => {
+                    notes.push({ id: doc.id, ...doc.data() });
+                });
+
+                // In-memory sort by timestamp descending
+                notes.sort((a, b) => {
+                    const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt || 0);
+                    const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt || 0);
+                    return timeB - timeA;
+                });
+
+                renderNotesList(notes);
+
+            }, (error) => {
+                console.error("Firestore Listen Error:", error);
+                displays.notesLoading.classList.add('hidden');
+                showToast("Failed to load notes. Please check connection.");
+            });
+        }
+
+        // Render notes to the DOM
+        function renderNotesList(notes) {
+            displays.notesCount.textContent = `${notes.length} note${notes.length !== 1 ? 's' : ''}`;
+            
+            if (notes.length === 0) {
+                displays.notesEmpty.classList.remove('hidden');
+                displays.notesEmpty.classList.add('flex');
+                displays.notesGrid.innerHTML = '';
+                return;
+            }
+
+            displays.notesEmpty.classList.add('hidden');
+            displays.notesEmpty.classList.remove('flex');
+            
+            let html = '';
+            notes.forEach(note => {
+                // Ensure note content wraps nicely and preserves basic newlines (convert to <br>)
+                const formattedContent = escapeHTML(note.content).replace(/\n/g, '<br>');
+                const isOwner = note.authorId === currentUserId;
+                const timestampVal = note.createdAt?.toMillis ? note.createdAt.toMillis() : note.createdAt;
+
+                // Format tags if they exist
+                let tagsHtml = '';
+                if (note.tags && Array.isArray(note.tags) && note.tags.length > 0) {
+                    tagsHtml = `<div class="flex flex-wrap gap-1 mt-2 mb-1">` + 
+                        note.tags.map(tag => `<span class="bg-blue-50 text-blue-600 text-[10px] font-semibold px-2 py-0.5 rounded">${escapeHTML(tag)}</span>`).join('') + 
+                        `</div>`;
+                }
+
+                html += `
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col relative group transition hover:shadow-md h-72">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold text-lg text-gray-800 line-clamp-1 flex-1" title="${escapeHTML(note.title)}">${escapeHTML(note.title)}</h4>
+                            ${isOwner ? `
+                            <button onclick="window.deleteNote('${note.id}')" class="text-gray-400 hover:text-red-500 transition p-1 bg-gray-50 rounded-md opacity-0 group-hover:opacity-100 focus:opacity-100" title="Delete Note">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                            ` : ''}
+                        </div>
+                        ${tagsHtml}
+                        <div class="text-gray-600 text-sm mb-4 flex-1 overflow-hidden relative ${tagsHtml ? 'mt-1' : ''}">
+                             <div class="line-clamp-6">${formattedContent}</div>
+                        </div>
+                        <div class="mt-auto pt-3 border-t border-gray-50 flex justify-between items-center text-xs text-gray-400">
+                            <span class="text-[11px] font-medium text-gray-500 break-all pr-2" title="${escapeHTML(note.authorName || 'Unknown')}">By: ${escapeHTML(note.authorName || 'Unknown')}</span>
+                            <span class="whitespace-nowrap pl-2">${formatDate(timestampVal)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            displays.notesGrid.innerHTML = html;
+        }
+
+        // Add a new note
+        forms.note.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUserId) return;
+
+            const title = inputs.title.value.trim();
+            const content = inputs.content.value.trim();
+            
+            // Gather selected tags
+            const selectedTags = Array.from(document.querySelectorAll('.note-tag-checkbox:checked')).map(cb => cb.value);
+
+            if (!title || !content) {
+                showToast("Please provide both title and content.");
+                return;
+            }
+
+            buttons.saveNote.disabled = true;
+            buttons.saveNote.innerHTML = '<div class="loader w-4 h-4 border-2 border-white mr-2 inline-block align-middle"></div> Saving...';
+
+            try {
+                const notesRef = collection(db, 'artifacts', appId, 'public', 'data', 'notes');
+                
+                let authorName = auth.currentUser.email || "User";
+
+                await addDoc(notesRef, {
+                    title: title,
+                    content: content,
+                    tags: selectedTags,
+                    authorId: currentUserId,
+                    authorName: authorName,
+                    createdAt: serverTimestamp() 
+                });
+
+                // Clear form and tags
+                forms.note.reset();
+                document.querySelectorAll('.note-tag-checkbox').forEach(cb => cb.checked = false);
+
+                showToast("Note saved successfully!", false);
+
+            } catch (error) {
+                console.error("Error adding note: ", error);
+                showToast("Failed to save note. Ensure you are logged in.");
+            } finally {
+                buttons.saveNote.disabled = false;
+                buttons.saveNote.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Save Note';
+            }
+        });
+
+        // Global function to delete a note (needed because it's called from inline HTML)
+        window.deleteNote = async (noteId) => {
+            if (!currentUserId) return;
+            
+            // Note: In a production app, we would use a custom modal instead of confirm().
+            // However, per instructions, we avoid standard alert/confirm.
+            // For simplicity in this UI flow, delete is triggered directly on click. 
+            // The Firebase security rules usually prevent deleting other users' notes.
+            
+            try {
+                const noteRef = doc(db, 'artifacts', appId, 'public', 'data', 'notes', noteId);
+                await deleteDoc(noteRef);
+                showToast("Note deleted.", false);
+            } catch (error) {
+                console.error("Error deleting note: ", error);
+                showToast("Failed to delete note. You may not have permission.");
+            }
+        };
+
+        // Kick off the initial authentication flow
+        initAuth();
+
+    </script>
+</body>
+</html>
